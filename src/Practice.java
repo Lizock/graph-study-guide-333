@@ -1,5 +1,10 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 public class Practice {
@@ -25,7 +30,25 @@ public class Practice {
    * @return the number of vertices with odd values reachable from the starting vertex
    */
   public static int oddVertices(Vertex<Integer> starting) {
-    return 0;
+    if (starting == null) return 0;
+    Set<Vertex<Integer>> visited = new HashSet<>();
+    return oddVerticesHelper(starting, visited);
+  }
+
+  public static int oddVerticesHelper(Vertex<Integer> starting, Set<Vertex<Integer>> visited) {
+    if(visited.contains(starting)) return 0;
+
+    visited.add(starting);
+
+    int count = 0;
+    if (starting.data % 2 != 0 ){
+      count = 1;
+    }
+
+    for(Vertex<Integer> neighbor : starting.neighbors){
+      count += oddVerticesHelper(neighbor, visited);
+    }
+    return count;
   }
 
   /**
@@ -48,7 +71,25 @@ public class Practice {
    */
   public static List<Integer> sortedReachable(Vertex<Integer> starting) {
     // Unimplemented: perform a depth-first search and sort the collected values.
-    return null;
+    List<Integer> list = new ArrayList<>();
+    if(starting == null) return list;
+
+    Set<Vertex<Integer>> visited = new HashSet<>();
+    sortedReachableHelper(starting, visited, list);
+
+    Collections.sort(list);
+    return list;
+  }
+
+  public static void sortedReachableHelper(Vertex<Integer> starting, Set<Vertex<Integer>> visited, List<Integer> list) {
+    if(visited.contains(starting)) return;
+
+    visited.add(starting);
+    list.add(starting.data);
+
+    for(Vertex<Integer> neighbor : starting.neighbors){
+      sortedReachableHelper(neighbor, visited, list);
+    }
   }
 
   /**
@@ -62,7 +103,25 @@ public class Practice {
    * @return a sorted list of all reachable vertex values
    */
   public static List<Integer> sortedReachable(Map<Integer, Set<Integer>> graph, int starting) {
-    return null;
+    List<Integer> list = new ArrayList<>();
+    if(graph == null || !graph.containsKey(starting)) return list;
+
+    Set<Integer> visited = new HashSet<>();
+    sortedReachableHelper(graph, starting, list, visited);
+
+    Collections.sort(list);
+    return list;
+  }
+
+  public static void sortedReachableHelper(Map<Integer, Set<Integer>> graph, int starting, List<Integer> list, Set<Integer> visited) {
+    if(visited.contains(starting)) return;
+
+    visited.add(starting);
+    list.add(starting);
+
+    for(int neighbor : graph.get(starting)){
+      sortedReachableHelper(graph, neighbor, list, visited);
+    }
   }
 
   /**
@@ -80,7 +139,26 @@ public class Practice {
    * @return true if there is a two-way connection between v1 and v2, false otherwise
    */
   public static <T> boolean twoWay(Vertex<T> v1, Vertex<T> v2) {
-    return false;
+    if(v1 == null || v2 == null) return false;
+    if(v1 == v2) return true;
+
+    boolean canReachV2 = twoWayHelper(v1, v2, new HashSet<>());
+    boolean canReachV1 = twoWayHelper(v2, v1, new HashSet<>());
+
+    return canReachV2 && canReachV1;
+  }
+
+  public static <T> boolean twoWayHelper(Vertex<T> current, Vertex<T> target, Set<Vertex<T>> visited) {
+    if (current.equals(target)) return true;
+    if (!visited.add(current)) return false;
+
+    for (Vertex<T> neighbor : current.neighbors){
+      if (twoWayHelper(neighbor, target, visited)){
+          return true;
+      }
+    }
+
+  return false;
   }
 
   /**
@@ -96,6 +174,24 @@ public class Practice {
    * @return whether there exists a valid positive path from starting to ending
    */
   public static boolean positivePathExists(Map<Integer, Set<Integer>> graph, int starting, int ending) {
+    if (!graph.containsKey(starting) || !graph.containsKey(ending) || starting <= 0 || ending <= 0) return false;
+   
+    Set<Integer> visited = new HashSet<>();
+    return positivePathExistsHelper(graph, starting, ending, visited);
+  }
+
+  private static boolean positivePathExistsHelper(Map<Integer, Set<Integer>> graph, int current, int target, Set<Integer> visited) {
+    if (current == target) return true;
+    if (visited.contains(current) || current <= 0) return false;
+    
+    visited.add(current);
+    
+    for (int neighbor : graph.getOrDefault(current, new HashSet<>())){
+      if (positivePathExistsHelper(graph, neighbor, target, visited)){
+          return true;
+      }
+    }
+    
     return false;
   }
 
@@ -109,6 +205,27 @@ public class Practice {
    * @return true if a person in the extended network works at the specified company, false otherwise
    */
   public static boolean hasExtendedConnectionAtCompany(Professional person, String companyName) {
+    if (person == null) return false;
+    
+    Set<Professional> visited = new HashSet<>();
+    Queue<Professional> queue = new LinkedList<>();
+    queue.add(person);
+    visited.add(person);
+    
+    while (!queue.isEmpty()) {
+      Professional current = queue.poll();
+      if (current.getCompany().equals(companyName)){
+          return true;
+      }
+      
+      for (Professional connection : current.getConnections()){
+        if (!visited.contains(connection)) {
+          visited.add(connection);
+          queue.add(connection);
+        }
+      }
+    }
+    
     return false;
   }
 }
